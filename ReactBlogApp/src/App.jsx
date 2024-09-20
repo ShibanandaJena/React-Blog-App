@@ -1,20 +1,38 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
-
+import {useDispatch,useSelector} from 'react-redux'
+import authService from './appwrite/auth'
+import {login,logout} from './redux/authSlice'
+import {Outlet} from 'react-router-dom'
+import {Header,Footer} from './components/index'
 
 function App() {
-  console.log(import.meta.env.VITE_APP_APPWRITE_URL);
-  const [count, setCount] = useState(0)
+  const [loading, setLoading] = useState(true)
 
-  // Bubu phus phus ne 
+  const dispatch = useDispatch()
 
-  return (
-    <> 
-      <div>
-        <h1>This is a blog app</h1>
+  useEffect(()=>{
+      authService.getCurrentUser()
+      .then((userData)=>{
+        if(userData){
+          dispatch(login({userData}))
+        }
+        else{
+          dispatch(logout())
+        }
+      })
+      .finally(()=> setLoading(false))
+  },[])
+
+  
+  return !loading ? (
+    <div className='min-h-screen flex flex-wrap content-between bg-slate-400'>
+      <div className='w-full border-l-amber-800'>
+        <Header></Header>
+        <Footer></Footer>
       </div>
-    </>
-  )
+    </div>
+  ) : (null)
 }
 
 export default App
