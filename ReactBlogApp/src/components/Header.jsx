@@ -6,8 +6,6 @@ import Container from './Container'
 import Logo from './Logo'
 
 
-
-
 function Header() {
 
   const authStatus = useSelector((state)=>state.auth.status)
