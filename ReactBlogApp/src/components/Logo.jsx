@@ -6,7 +6,7 @@ function Logo({ width = '100px' }) {
       <img 
         src="https://cdn.pixabay.com/photo/2017/06/25/14/43/blogger-2440979_1280.png" 
         alt="Logo"
-        style={{ width: '100%', height: 'auto' }} // Ensures the image is responsive
+        style={{ width: 'auto', height: '50px' }} // Ensures the image is responsive
       />
     </div>
   );

@@ -20,48 +20,60 @@ function PostForm({post}) {
     const navigate = useNavigate()
     const userData = useSelector((state) => state.auth.userData)
 
-    const submit= async(data)=>{
-      if(post){
-        const file = data.image[0]?(appwriteService.uploadFile(data.image[0]) ) : null
-        
-        if(file){
-          appwriteService.deleteFile(post.featuredImage)
-        }
-
-        const dbPost = await appwriteService.updatePost(
-          post.$id,{
-            ...data,
-            featuredImage: file? file.$id : undefined})
-
-            if(dbPost){
-              navigate(`/post/${dbPost.$id}`)}
-
-            else{
-              const file = await appwriteService.uploadFile(data.image[0]);
-
-              if (file){
-                const fileId = file.$id
-                data.featuredImage = fileId
-                await appwriteService.createPost({
-                  ...data,
-                  userId:userData.$id,
-                })
-
-                if(dbPost){
-                  navigate(`/post/${dbPost.$id}`)}
+    const submit = async (data) => {
+      try {
+          let file = null;
+  
+          // Handle file upload only if there is a new file in the form
+          if (data.image && data.image[0]) {
+              file = await appwriteService.uploadFile(data.image[0]);
+  
+              // If updating a post and a new file is uploaded, delete the old file
+              if (post && post.featuredImage) {
+                  await appwriteService.deleteFile(post.featuredImage);
               }
-            }}
-    }
+          }
+  
+          // If we are updating an existing post
+          if (post) {
+              const updatedPost = await appwriteService.updatePost(post.$id, {
+                  ...data,
+                  featuredImage: file ? file.$id : post.featuredImage, // Use new file or keep the old one
+              });
+  
+              if (updatedPost) {
+                  navigate(`/post/${updatedPost.$id}`);
+              } else {
+                  throw new Error("Failed to update post.");
+              }
+          } 
+          // If we are creating a new post
+          else {
+              const newPost = await appwriteService.createPost({
+                  ...data,
+                  featuredImage: file ? file.$id : undefined, // Set the uploaded image
+                  userId: userData.$id,
+              });
+  
+              if (newPost) {
+                  navigate(`/post/${newPost.$id}`);
+              } else {
+                  throw new Error("Failed to create post.");
+              }
+          }
+      } catch (error) {
+          console.error("Error submitting post:", error);
+      }
+  };
+  
 
     const slugTransform = useCallback((value)=>{
-      if(value && typeof value === 'string'){
+      if(value && typeof value === "string"){
           return value
                 .trim()
                 .toLowerCase()
-                .replace(/^[a-zA-Z\d\s]+/g,'-')
-                .replace(/\s/g,'-')
-
-         
+                .replace(/[^a-zA-Z\d\s]+/g, "-")
+                .replace(/\s/g, "-");   
       } return ''
 
     },[])
@@ -74,7 +86,7 @@ function PostForm({post}) {
           ))
         }
       })
-      return subscription.unsubscribe()
+      return ()=> subscription.unsubscribe()
 
     },[watch,slugTransform,setValue])
 
